@@ -34,8 +34,8 @@ export default function VideosScreen() {
       const qs = categoria ? `${API_ENDPOINTS.VIDEOS}?categoria=${encodeURIComponent(categoria)}` : API_ENDPOINTS.VIDEOS;
       const data = await apiClient.get(qs);
       // API: [{ id, titulo, descripcion, url, thumbnail, categoria, duracion, fecha_creacion }]
-      const list = (Array.isArray(data) ? data : []).map(v => ({
-        id: v.id,
+      const list = (Array.isArray(data) ? data : []).map((v,i)=> ({
+        id: i,
         title: v.titulo,
         description: v.descripcion,
         url: v.url,
