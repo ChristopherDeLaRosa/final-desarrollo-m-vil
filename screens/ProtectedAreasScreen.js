@@ -1,18 +1,39 @@
-import React from 'react';
+import { useState } from 'react';
 import {
   View,
   Text,
   StyleSheet,
-  ScrollView,
-  Image,
   TouchableOpacity,
-  Linking,
+  FlatList,
 } from 'react-native';
-import { Card, Title, Paragraph, Chip, Button, Divider } from 'react-native-paper';
+import { Card, Title, Paragraph, Chip, Searchbar } from 'react-native-paper';
 import { Ionicons } from '@expo/vector-icons';
+import areas from '../assets/protectedareas.json';
 
-export default function ProtectedAreaDetailScreen({ route, navigation }) {
-  const { area } = route.params;
+export default function ProtectedAreasScreen({ navigation }) {
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filteredAreas, setFilteredAreas] = useState(areas);
+
+  const handleSearch = (query) => {
+    setSearchQuery(query);
+    
+    if (query.trim() === '') {
+      setFilteredAreas(areas);
+    } else {
+      const filtered = areas.filter(area => 
+        area.nombre.toLowerCase().includes(query.toLowerCase()) ||
+        area.tipo.toLowerCase().includes(query.toLowerCase()) ||
+        area.ubicacion.toLowerCase().includes(query.toLowerCase()) ||
+        area.descripcion.toLowerCase().includes(query.toLowerCase())
+      );
+      setFilteredAreas(filtered);
+    }
+  };
+
+  const clearSearch = () => {
+    setSearchQuery('');
+    setFilteredAreas(areas);
+  };
 
   const getTypeColor = (type) => {
     const colors = {
@@ -20,17 +41,70 @@ export default function ProtectedAreaDetailScreen({ route, navigation }) {
       'Reserva Científica': '#1976D2',
       'Reserva Natural': '#388E3C',
       'Monumento Natural': '#F57C00',
+      'Zona Protegida': '#7B1FA2',
     };
     return colors[type] || '#666';
   };
 
-  const openLocation = () => {
-    const url = `https://maps.google.com/?q=${area.latitude},${area.longitude}`;
-    Linking.openURL(url);
+  const navigateToDetail = (areaId) => {
+    navigation.navigate('ProtectedAreaDetail', { id: areaId });
   };
 
+  const navigateToMap = () => {
+    navigation.navigate('ProtectedAreasMapScreen');
+  };
+
+  const renderAreaCard = ({ item }) => (
+    <TouchableOpacity 
+      onPress={() => navigateToDetail(item.id)}
+      style={styles.cardContainer}
+    >
+      <Card style={styles.card}>
+        <Card.Cover 
+          source={{ uri: item.imagen }} 
+          style={styles.cardImage}
+        />
+        <Card.Content style={styles.cardContent}>
+          <View style={styles.cardHeader}>
+            <Title style={styles.cardTitle} numberOfLines={2}>
+              {item.nombre}
+            </Title>
+            <Chip 
+              style={[styles.typeChip, { backgroundColor: getTypeColor(item.tipo) }]}
+              textStyle={styles.typeText}
+            >
+              {item.tipo}
+            </Chip>
+          </View>
+          
+          <View style={styles.locationContainer}>
+            <Ionicons name="location-outline" size={16} color="#666" />
+            <Text style={styles.locationText}>{item.ubicacion}</Text>
+          </View>
+          
+          <Paragraph style={styles.cardDescription} numberOfLines={3}>
+            {item.descripcion}
+          </Paragraph>
+          
+          <View style={styles.cardFooter}>
+            <View style={styles.sizeContainer}>
+              <Ionicons name="resize-outline" size={16} color="#666" />
+              <Text style={styles.sizeText}>{item.superficie_km2} km²</Text>
+            </View>
+            <View style={styles.dateContainer}>
+              <Ionicons name="calendar-outline" size={16} color="#666" />
+              <Text style={styles.dateText}>
+                {new Date(item.fecha_creacion).getFullYear()}
+              </Text>
+            </View>
+          </View>
+        </Card.Content>
+      </Card>
+    </TouchableOpacity>
+  );
+
   return (
-    <ScrollView style={styles.container}>
+    <View style={styles.container}>
       <View style={styles.header}>
         <TouchableOpacity 
           style={styles.backButton}
@@ -38,127 +112,62 @@ export default function ProtectedAreaDetailScreen({ route, navigation }) {
         >
           <Ionicons name="arrow-back" size={24} color="white" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>{area.name}</Text>
-        <View style={styles.placeholder} />
-      </View>
+        <Text style={styles.headerTitle}>Áreas Protegidas</Text>
+        <TouchableOpacity 
+          style={styles.mapButton}
+          onPress={navigateToMap}
+        >
+          <Ionicons name="map" size={24} color="white" />
+        </TouchableOpacity>
+      </View> 
 
-      <Image source={{ uri: area.image }} style={styles.heroImage} />
-
-      <View style={styles.content}>
-        <View style={styles.areaHeader}>
-          <Chip 
-            style={[styles.typeChip, { backgroundColor: getTypeColor(area.type) }]}
-            textStyle={styles.typeText}
-          >
-            {area.type}
-          </Chip>
-          <Text style={styles.areaSize}>{area.area}</Text>
-        </View>
-
-        <Title style={styles.areaTitle}>{area.name}</Title>
-        <Text style={styles.areaProvince}>📍 {area.province}</Text>
-
-        <Card style={styles.infoCard}>
-          <Card.Content>
-            <Title style={styles.sectionTitle}>Descripción</Title>
-            <Paragraph style={styles.description}>{area.description}</Paragraph>
-            
-            <Divider style={styles.divider} />
-            
-            <View style={styles.infoRow}>
-              <Text style={styles.infoLabel}>Establecido:</Text>
-              <Text style={styles.infoValue}>{area.established}</Text>
-            </View>
-            
-            <View style={styles.infoRow}>
-              <Text style={styles.infoLabel}>Área Total:</Text>
-              <Text style={styles.infoValue}>{area.area}</Text>
-            </View>
-            
-            <View style={styles.infoRow}>
-              <Text style={styles.infoLabel}>Provincia:</Text>
-              <Text style={styles.infoValue}>{area.province}</Text>
-            </View>
-          </Card.Content>
-        </Card>
-
-        <Card style={styles.featuresCard}>
-          <Card.Content>
-            <Title style={styles.sectionTitle}>Características Principales</Title>
-            {area.features.map((feature, index) => (
-              <View key={index} style={styles.featureItem}>
-                <Text style={styles.featureIcon}>🌿</Text>
-                <Text style={styles.featureText}>{feature}</Text>
-              </View>
-            ))}
-          </Card.Content>
-        </Card>
-
-        <Card style={styles.locationCard}>
-          <Card.Content>
-            <Title style={styles.sectionTitle}>Ubicación</Title>
-            <Text style={styles.coordinatesText}>
-              Coordenadas: {area.latitude.toFixed(4)}, {area.longitude.toFixed(4)}
+      <View style={styles.searchContainer}>
+        <Searchbar
+          placeholder="Buscar por nombre, tipo o ubicación..."
+          onChangeText={handleSearch}
+          value={searchQuery}
+          style={styles.searchBar}
+          inputStyle={styles.searchInput}
+          iconColor="#2E7D32"
+          placeholderTextColor="#666"
+        />
+        {searchQuery !== '' && (
+          <View style={styles.searchResults}>
+            <Text style={styles.searchResultsText}>
+              {filteredAreas.length} resultado{filteredAreas.length !== 1 ? 's' : ''} encontrado{filteredAreas.length !== 1 ? 's' : ''}
             </Text>
-            <Button
-              mode="contained"
-              onPress={openLocation}
-              buttonColor="#2E7D32"
-              icon="map"
-              style={styles.locationButton}
-            >
-              Ver en Google Maps
-            </Button>
-          </Card.Content>
-        </Card>
-
-        <Card style={styles.tipsCard}>
-          <Card.Content>
-            <Title style={styles.sectionTitle}>Consejos para Visitantes</Title>
-            <View style={styles.tipItem}>
-              <Text style={styles.tipIcon}>🥾</Text>
-              <Text style={styles.tipText}>Usa calzado cómodo y apropiado para caminata</Text>
-            </View>
-            <View style={styles.tipItem}>
-              <Text style={styles.tipIcon}>💧</Text>
-              <Text style={styles.tipText}>Lleva suficiente agua y snacks</Text>
-            </View>
-            <View style={styles.tipItem}>
-              <Text style={styles.tipIcon}>📱</Text>
-              <Text style={styles.tipText}>Informa a alguien sobre tu itinerario</Text>
-            </View>
-            <View style={styles.tipItem}>
-              <Text style={styles.tipIcon}>🗑️</Text>
-              <Text style={styles.tipText}>No dejes rastro - lleva tu basura contigo</Text>
-            </View>
-            <View style={styles.tipItem}>
-              <Text style={styles.tipIcon}>📸</Text>
-              <Text style={styles.tipText}>Respeta la vida silvestre - no alimentes a los animales</Text>
-            </View>
-          </Card.Content>
-        </Card>
-
-        <View style={styles.actionButtons}>
-          <Button
-            mode="outlined"
-            onPress={openLocation}
-            icon="directions"
-            style={styles.actionButton}
-          >
-            Direcciones
-          </Button>
-          
-          <Button
-            mode="contained"
-            onPress={() => navigation.goBack()}
-            buttonColor="#2E7D32"
-            style={styles.actionButton}
-          >
-            Volver
-          </Button>
-        </View>
+            <TouchableOpacity onPress={clearSearch} style={styles.clearButton}>
+              <Text style={styles.clearButtonText}>Limpiar</Text>
+            </TouchableOpacity>
+          </View>
+        )}
       </View>
-    </ScrollView>
+
+      <FlatList
+        data={filteredAreas}
+        keyExtractor={(item) => item.id.toString()}
+        renderItem={renderAreaCard}
+        contentContainerStyle={styles.listContainer}
+        showsVerticalScrollIndicator={false}
+        ListEmptyComponent={() => (
+          <View style={styles.emptyContainer}>
+            <Ionicons name="search-outline" size={64} color="#ccc" />
+            <Text style={styles.emptyText}>No se encontraron áreas protegidas</Text>
+            <Text style={styles.emptySubtext}>
+              Intenta con otros términos de búsqueda
+            </Text>
+          </View>
+        )}
+      />
+
+      <TouchableOpacity 
+        style={styles.floatingMapButton}
+        onPress={navigateToMap}
+      >
+        <Ionicons name="map" size={24} color="white" />
+        <Text style={styles.floatingButtonText}>Mapa</Text>
+      </TouchableOpacity>
+    </View>
   );
 }
 
@@ -178,6 +187,9 @@ const styles = StyleSheet.create({
   backButton: {
     padding: 5,
   },
+  mapButton: {
+    padding: 5,
+  },
   headerTitle: {
     color: 'white',
     fontSize: 18,
@@ -189,134 +201,162 @@ const styles = StyleSheet.create({
   placeholder: {
     width: 34,
   },
-  heroImage: {
-    width: '100%',
-    height: 250,
-    resizeMode: 'cover',
-  },
-  content: {
+  searchContainer: {
     padding: 15,
+    paddingBottom: 10,
+    backgroundColor: '#f5f5f5',
   },
-  areaHeader: {
+  searchBar: {
+    elevation: 2,
+    backgroundColor: 'white',
+    borderRadius: 8,
+  },
+  searchInput: {
+    fontSize: 16,
+  },
+  searchResults: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    marginTop: 10,
+    paddingHorizontal: 5,
+  },
+  searchResultsText: {
+    fontSize: 14,
+    color: '#666',
+    fontWeight: '500',
+  },
+  clearButton: {
+    paddingVertical: 5,
+    paddingHorizontal: 10,
+  },
+  clearButtonText: {
+    fontSize: 14,
+    color: '#2E7D32',
+    fontWeight: 'bold',
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingTop: 100,
+  },
+  emptyText: {
+    fontSize: 18,
+    color: '#666',
+    fontWeight: 'bold',
+    marginTop: 15,
+    textAlign: 'center',
+  },
+  emptySubtext: {
+    fontSize: 14,
+    color: '#999',
+    marginTop: 5,
+    textAlign: 'center',
+  },
+  listContainer: {
+    paddingHorizontal: 15,
+    paddingBottom: 30,
+  },
+  cardContainer: {
     marginBottom: 15,
   },
+  card: {
+    elevation: 3,
+    borderRadius: 12,
+    backgroundColor: 'white',
+  },
+  cardImage: {
+    height: 180,
+    borderBottomLeftRadius: 0,
+    borderBottomRightRadius: 0,
+  },
+  cardContent: {
+    padding: 15,
+  },
+  cardHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: 10,
+  },
+  cardTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#333',
+    flex: 1,
+    marginRight: 10,
+  },
   typeChip: {
-    height: 30,
+    height: 28,
+    minWidth: 80,
   },
   typeText: {
     color: 'white',
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: 'bold',
   },
-  areaSize: {
-    fontSize: 14,
-    color: '#666',
-    fontWeight: 'bold',
-  },
-  areaTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 5,
-    lineHeight: 30,
-  },
-  areaProvince: {
-    fontSize: 16,
-    color: '#666',
-    marginBottom: 20,
-  },
-  infoCard: {
-    elevation: 3,
-    marginBottom: 15,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    color: '#2E7D32',
-    marginBottom: 10,
-  },
-  description: {
-    fontSize: 16,
-    lineHeight: 24,
-    color: '#333',
-    textAlign: 'justify',
-    marginBottom: 15,
-  },
-  divider: {
-    marginVertical: 15,
-  },
-  infoRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 8,
-  },
-  infoLabel: {
-    fontSize: 14,
-    color: '#666',
-    fontWeight: 'bold',
-  },
-  infoValue: {
-    fontSize: 14,
-    color: '#333',
-  },
-  featuresCard: {
-    elevation: 3,
-    marginBottom: 15,
-  },
-  featureItem: {
+  locationContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 10,
   },
-  featureIcon: {
-    fontSize: 18,
-    marginRight: 12,
-  },
-  featureText: {
-    flex: 1,
-    fontSize: 14,
-    color: '#333',
-  },
-  locationCard: {
-    elevation: 3,
-    marginBottom: 15,
-  },
-  coordinatesText: {
+  locationText: {
     fontSize: 14,
     color: '#666',
+    marginLeft: 5,
+    fontWeight: '500',
+  },
+  cardDescription: {
+    fontSize: 14,
+    color: '#666',
+    lineHeight: 20,
     marginBottom: 15,
   },
-  locationButton: {
-    paddingVertical: 5,
-  },
-  tipsCard: {
-    elevation: 3,
-    marginBottom: 20,
-  },
-  tipItem: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    marginBottom: 12,
-  },
-  tipIcon: {
-    fontSize: 16,
-    marginRight: 12,
-    marginTop: 2,
-  },
-  tipText: {
-    flex: 1,
-    fontSize: 14,
-    color: '#333',
-    lineHeight: 20,
-  },
-  actionButtons: {
+  cardFooter: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    gap: 10,
+    alignItems: 'center',
   },
-  actionButton: {
-    flex: 1,
+  sizeContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  sizeText: {
+    fontSize: 12,
+    color: '#666',
+    marginLeft: 5,
+    fontWeight: 'bold',
+  },
+  dateContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  dateText: {
+    fontSize: 12,
+    color: '#666',
+    marginLeft: 5,
+  },
+  floatingMapButton: {
+    position: 'absolute',
+    bottom: 20,
+    right: 20,
+    backgroundColor: '#2E7D32',
+    borderRadius: 28,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    elevation: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  floatingButtonText: {
+    color: 'white',
+    fontSize: 14,
+    fontWeight: 'bold',
+    marginLeft: 8,
   },
 });

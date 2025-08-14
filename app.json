@@ -7,6 +7,14 @@
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
+    "expo": {
+      "plugins": [
+        "react-native-maps",
+        {
+          "androidGoogleMapsApiKey": "AIzaSyBGY2HD_qHezSsMzPcccs1UneWTSPuGc9k"
+        }
+      ]
+    },
     "splash": {
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
