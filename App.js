@@ -15,7 +15,7 @@ import ServicesScreen from './screens/ServicesScreen';
 import NewsScreen from './screens/NewsScreen';
 import VideosScreen from './screens/VideosScreen';
 import ProtectedAreasScreen from './screens/ProtectedAreasScreen';
-import AreaMapScreen from './screens/AreaMapScreen';
+import ProtectedAreasMapScreen from './screens/ProtectedAreasMapScreen';
 import MeasuresScreen from './screens/MeasuresScreen';
 import TeamScreen from './screens/TeamScreen';
 import VolunteerScreen from './screens/VolunteerScreen';
@@ -51,7 +51,7 @@ function EnvironmentStack() {
     <Stack.Navigator screenOptions={{ headerShown: false }}>
       <Stack.Screen name="ProtectedAreas" component={ProtectedAreasScreen} />
       <Stack.Screen name="ProtectedAreaDetail" component={ProtectedAreaDetailScreen} />
-      <Stack.Screen name="AreaMap" component={AreaMapScreen} />
+      <Stack.Screen name="ProtectedAreasMapScreen" component={ProtectedAreasMapScreen} />
       <Stack.Screen name="Measures" component={MeasuresScreen} />
     </Stack.Navigator>
   );

@@ -1,4 +1,3 @@
-import React from 'react';
 import {
   View,
   Text,
@@ -10,24 +9,82 @@ import {
 } from 'react-native';
 import { Card, Title, Paragraph, Chip, Button, Divider } from 'react-native-paper';
 import { Ionicons } from '@expo/vector-icons';
+import areas from '../assets/protectedareas.json';
 
 export default function ProtectedAreaDetailScreen({ route, navigation }) {
-  const { area } = route?.params;
-
+  const { id } = route?.params;
+  const area = areas.find(a => a.id === id);
   const getTypeColor = (type) => {
     const colors = {
       'Parque Nacional': '#2E7D32',
       'Reserva Científica': '#1976D2',
       'Reserva Natural': '#388E3C',
       'Monumento Natural': '#F57C00',
+      'Zona Protegida': '#7B1FA2',
     };
     return colors[type] || '#666';
   };
 
+  const getAreaFeatures = (type) => {
+    const features = {
+      'Parque Nacional': [
+        'Protección de ecosistemas naturales',
+        'Actividades recreativas y turismo',
+        'Investigación científica',
+        'Conservación de la biodiversidad'
+      ],
+      'Reserva Científica': [
+        'Investigación científica especializada',
+        'Conservación de especies endémicas',
+        'Educación ambiental',
+        'Protección de hábitats únicos'
+      ],
+      'Reserva Natural': [
+        'Conservación de recursos naturales',
+        'Protección de especies nativas',
+        'Investigación ecológica',
+        'Educación ambiental'
+      ],
+      'Monumento Natural': [
+        'Protección de formaciones geológicas',
+        'Conservación de sitios históricos',
+        'Valor paisajístico excepcional',
+        'Turismo responsable'
+      ],
+      'Zona Protegida': [
+        'Protección de ecosistemas marinos',
+        'Conservación de especies acuáticas',
+        'Investigación marina',
+        'Turismo ecológico controlado'
+      ]
+    };
+    return features[type] || ['Área de conservación natural', 'Protección ambiental'];
+  };
+
   const openLocation = () => {
-    const url = `https://maps.google.com/?q=${area.latitude},${area.longitude}`;
+    const url = `https://maps.google.com/?q=${area.latitud},${area.longitud}`;
     Linking.openURL(url);
   };
+
+  if (!area) {
+    return (
+      <View style={styles.container}>
+        <View style={styles.header}>
+          <TouchableOpacity 
+            style={styles.backButton}
+            onPress={() => navigation.goBack()}
+          >
+            <Ionicons name="arrow-back" size={24} color="white" />
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>Área no encontrada</Text>
+          <View style={styles.placeholder} />
+        </View>
+        <View style={styles.content}>
+          <Text>El área protegida no fue encontrada.</Text>
+        </View>
+      </View>
+    );
+  }
 
   return (
     <ScrollView style={styles.container}>
@@ -38,46 +95,51 @@ export default function ProtectedAreaDetailScreen({ route, navigation }) {
         >
           <Ionicons name="arrow-back" size={24} color="white" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>{area.name}</Text>
+        <Text style={styles.headerTitle}>{area.nombre}</Text>
         <View style={styles.placeholder} />
       </View>
 
-      <Image source={{ uri: area.image }} style={styles.heroImage} />
+      <Image source={{ uri: area.imagen }} style={styles.heroImage} />
 
       <View style={styles.content}>
         <View style={styles.areaHeader}>
           <Chip 
-            style={[styles.typeChip, { backgroundColor: getTypeColor(area.type) }]}
+            style={[styles.typeChip, { backgroundColor: getTypeColor(area.tipo) }]}
             textStyle={styles.typeText}
           >
-            {area.type}
+            {area.tipo}
           </Chip>
-          <Text style={styles.areaSize}>{area.area}</Text>
+          <Text style={styles.areaSize}>{area.superficie_km2} km²</Text>
         </View>
 
-        <Title style={styles.areaTitle}>{area.name}</Title>
-        <Text style={styles.areaProvince}>📍 {area.province}</Text>
+        <Title style={styles.areaTitle}>{area.nombre}</Title>
+        <Text style={styles.areaProvince}>📍 {area.ubicacion}</Text>
 
         <Card style={styles.infoCard}>
           <Card.Content>
             <Title style={styles.sectionTitle}>Descripción</Title>
-            <Paragraph style={styles.description}>{area.description}</Paragraph>
+            <Paragraph style={styles.description}>{area.descripcion}</Paragraph>
             
             <Divider style={styles.divider} />
             
             <View style={styles.infoRow}>
               <Text style={styles.infoLabel}>Establecido:</Text>
-              <Text style={styles.infoValue}>{area.established}</Text>
+              <Text style={styles.infoValue}>{new Date(area.fecha_creacion).toLocaleDateString('es-ES')}</Text>
             </View>
             
             <View style={styles.infoRow}>
               <Text style={styles.infoLabel}>Área Total:</Text>
-              <Text style={styles.infoValue}>{area.area}</Text>
+              <Text style={styles.infoValue}>{area.superficie_km2} km²</Text>
             </View>
             
             <View style={styles.infoRow}>
-              <Text style={styles.infoLabel}>Provincia:</Text>
-              <Text style={styles.infoValue}>{area.province}</Text>
+              <Text style={styles.infoLabel}>Ubicación:</Text>
+              <Text style={styles.infoValue}>{area.ubicacion}</Text>
+            </View>
+            
+            <View style={styles.infoRow}>
+              <Text style={styles.infoLabel}>Tipo:</Text>
+              <Text style={styles.infoValue}>{area.tipo}</Text>
             </View>
           </Card.Content>
         </Card>
@@ -85,7 +147,7 @@ export default function ProtectedAreaDetailScreen({ route, navigation }) {
         <Card style={styles.featuresCard}>
           <Card.Content>
             <Title style={styles.sectionTitle}>Características Principales</Title>
-            {area.features.map((feature, index) => (
+            {getAreaFeatures(area.tipo).map((feature, index) => (
               <View key={index} style={styles.featureItem}>
                 <Text style={styles.featureIcon}>🌿</Text>
                 <Text style={styles.featureText}>{feature}</Text>
@@ -98,7 +160,7 @@ export default function ProtectedAreaDetailScreen({ route, navigation }) {
           <Card.Content>
             <Title style={styles.sectionTitle}>Ubicación</Title>
             <Text style={styles.coordinatesText}>
-              Coordenadas: {area.latitude.toFixed(4)}, {area.longitude.toFixed(4)}
+              Coordenadas: {area.latitud.toFixed(4)}, {area.longitud.toFixed(4)}
             </Text>
             <Button
               mode="contained"
