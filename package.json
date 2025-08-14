@@ -34,5 +34,12 @@
   "devDependencies": {
     "@babel/core": "^7.20.0"
   },
+  "prettier": {
+    "jsxSingleQuote": true,
+    "semi": false,
+    "singleQuote": true,
+    "singleAttributePerLine": true,
+    "trailingComma": "none"
+  },
   "private": true
 }
