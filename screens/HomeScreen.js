@@ -211,7 +211,7 @@ export default function HomeScreen({ navigation }) {
           <TouchableOpacity
             style={styles.quickCard}
             onPress={() =>
-              navigation.navigate("Información", { screen: "AboutUsScreen" })
+              navigation.navigate("Información", { screen: "AboutUs" })
             }
           >
             <Card style={styles.card}>
