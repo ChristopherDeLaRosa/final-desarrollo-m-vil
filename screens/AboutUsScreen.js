@@ -38,11 +38,11 @@ export default function AboutUsScreen() {
       id: 3,
       name: 'Luis Arturo Florentino',
       matricula: '2021-2158',
-      role: 'Diseñador UX/UI',
-      phone: '+1-809-345-6789',
-      telegram: 'https://t.me/carlos_design',
-      image: 'https://via.placeholder.com/120x120/66BB6A/FFFFFF?text=CAM',
-      skills: ['Figma', 'Adobe XD', 'Prototyping']
+      role: 'Desarrollador Backend',
+      phone: '+1-829-624-8056',
+      telegram: 'https://t.me/doblel09',
+      image: require('../assets/luis.jpg'),
+      skills: ['DotNet', 'Typescript', 'Python', 'React']
     }
   ]
 
