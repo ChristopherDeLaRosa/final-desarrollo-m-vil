@@ -17,9 +17,9 @@ export default function AboutUsScreen() {
       name: 'Christopher José de la Rosa Diaz',
       matricula: '2023-0934',
       role: 'Desarrollador Frontend',
-      phone: '+1-809-123-4567',
-      telegram: 'https://t.me/juancarlos_dev',
-      image: 'https://via.placeholder.com/120x120/2E7D32/FFFFFF?text=JCR',
+      phone: '+1-829-620-4585',
+      telegram: 'https://t.me/chrisdiaz25',
+      image: require('../assets/christopher.png'),
       skills: ['React Native', 'JavaScript', 'UI/UX Design']
     },
     // TODO: Rafael que coloque sus detalles
@@ -89,7 +89,7 @@ export default function AboutUsScreen() {
             <Card.Content style={styles.developerContent}>
               <View style={styles.developerHeader}>
                 <Image
-                  source={{ uri: developer.image }}
+                  source={typeof developer.image === 'string' ? { uri: developer.image } : developer.image}
                   style={styles.developerImage}
                 />
                 <View style={styles.developerInfo}>
