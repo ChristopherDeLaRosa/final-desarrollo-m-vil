@@ -1,31 +1,11 @@
-import { useState, useEffect, useRef } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
-} from 'react-native';
-import MapView, { Marker, Callout, PROVIDER_GOOGLE } from 'react-native-maps';
-import { ActivityIndicator, Card, Button, Chip } from 'react-native-paper';
-import { Ionicons } from '@expo/vector-icons';
-import areas from '../assets/protectedareas.json';
+import { useState } from 'react'
+import { View, StyleSheet, TouchableOpacity, Text } from 'react-native'
+import { WebView } from 'react-native-webview'
+import { Ionicons } from '@expo/vector-icons'
+import areas from '../assets/protectedareas.json'
 
 export default function ProtectedAreasMapScreen({ navigation }) {
-  const [selectedArea, setSelectedArea] = useState(null);
-  const [mapReady, setMapReady] = useState(false);
-  const mapRef = useRef(null);
-
-  useEffect(() => {
-    setTimeout(() => {
-      setMapReady(true);
-    }, 1000);
-  }, []);
-
-  const onMapReady = () => {
-    setMapReady(true);
-    console.log('Mapa listo');
-  };
-
+  const [selectedArea, setSelectedArea] = useState(null)
 
   const getTypeColor = (type) => {
     const colors = {
@@ -34,167 +14,256 @@ export default function ProtectedAreasMapScreen({ navigation }) {
       'Reserva Natural': '#388E3C',
       'Monumento Natural': '#F57C00',
       'Zona Protegida': '#7B1FA2',
-    };
-    return colors[type] || '#666';
-  };
-
-  const handleMarkerPress = (area) => {
-    setSelectedArea(area);
-  };
-
-  const viewAreaDetails = () => {
-    if (selectedArea) {
-      navigation.navigate('ProtectedAreaDetail', { id: selectedArea.id });
+      'Refugio de Vida Silvestre': '#E91E63'
     }
-  };
+    return colors[type] || '#666'
+  }
+
+  const getTypeIcon = (type) => {
+    const icons = {
+      'Parque Nacional': '🏞️',
+      'Reserva Científica': '🔬',
+      'Reserva Natural': '🌿',
+      'Monumento Natural': '🗿',
+      'Zona Protegida': '🛡️',
+      'Refugio de Vida Silvestre': '🦆'
+    }
+    return icons[type] || '📍'
+  }
+
+  // Generar HTML para el mapa con Leaflet
+  const generateMapHTML = () => {
+    const markersData = areas.map((area) => ({
+      ...area,
+      color: getTypeColor(area.tipo),
+      icon: getTypeIcon(area.tipo)
+    }))
+
+    return `
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mapa de Áreas Protegidas</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+    <style>
+        body { 
+            margin: 0; 
+            padding: 0; 
+            height: 100vh;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        }
+        #map { 
+            height: 100vh; 
+            width: 100vw; 
+        }
+        .custom-popup {
+            min-width: 200px;
+        }
+        .popup-content {
+            padding: 8px;
+        }
+        .popup-title {
+            font-weight: bold;
+            font-size: 14px;
+            color: #333;
+            margin-bottom: 4px;
+        }
+        .popup-type {
+            background: #2E7D32;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 10px;
+            display: inline-block;
+            margin-bottom: 4px;
+        }
+        .popup-location {
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 4px;
+        }
+        .popup-description {
+            font-size: 11px;
+            color: #666;
+            line-height: 1.3;
+            margin-bottom: 8px;
+        }
+        .popup-stats {
+            font-size: 10px;
+            color: #888;
+            border-top: 1px solid #eee;
+            padding-top: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div id="map"></div>
+    
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+    <script>
+        // Inicializar el mapa centrado en República Dominicana
+        var map = L.map('map').setView([18.7357, -70.1627], 8);
+
+        // Agregar capa de OpenStreetMap (GRATIS, sin API key)
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors',
+            maxZoom: 18,
+        }).addTo(map);
+
+        // Datos de las áreas protegidas
+        var areasData = ${JSON.stringify(markersData)};
+
+        // Agregar marcadores para cada área
+        areasData.forEach(function(area) {
+            // Crear un marcador personalizado
+            var marker = L.marker([area.latitud, area.longitud])
+                .addTo(map);
+
+            // Crear contenido del popup
+            var popupContent = \`
+                <div class="custom-popup">
+                    <div class="popup-content">
+                        <div class="popup-title">\${area.icon} \${area.nombre}</div>
+                        <div class="popup-type" style="background: \${area.color}">\${area.tipo}</div>
+                        <div class="popup-location">📍 \${area.ubicacion}</div>
+                        <div class="popup-description">\${area.descripcion}</div>
+                        <div class="popup-stats">
+                            📏 \${area.superficie_km2} km² | 📅 \${new Date(area.fecha_creacion).getFullYear()}
+                        </div>
+                    </div>
+                </div>
+            \`;
+
+            marker.bindPopup(popupContent, {
+                maxWidth: 250,
+                className: 'custom-popup'
+            });
+
+            // Comunicación con React Native
+            marker.on('click', function() {
+                window.ReactNativeWebView?.postMessage(JSON.stringify({
+                    type: 'markerClick',
+                    area: area
+                }));
+            });
+        });
+
+        // Ajustar la vista para mostrar todos los marcadores
+        var group = new L.featureGroup(map._layers);
+        if (Object.keys(group._layers).length > 0) {
+            map.fitBounds(group.getBounds().pad(0.1));
+        }
+
+        // Manejar eventos de clic en el mapa
+        map.on('click', function() {
+            window.ReactNativeWebView?.postMessage(JSON.stringify({
+                type: 'mapClick'
+            }));
+        });
+    </script>
+</body>
+</html>`
+  }
+
+  const handleWebViewMessage = (event) => {
+    try {
+      const data = JSON.parse(event.nativeEvent.data)
+
+      if (data.type === 'markerClick') {
+        setSelectedArea(data.area)
+      } else if (data.type === 'mapClick') {
+        setSelectedArea(null)
+      }
+    } catch (error) {
+      console.log('Error parsing message:', error)
+    }
+  }
 
   return (
     <View style={styles.container}>
+      {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity 
+        <TouchableOpacity
           style={styles.backButton}
           onPress={() => navigation.goBack()}
         >
-          <Ionicons name="arrow-back" size={24} color="white" />
+          <Ionicons
+            name='arrow-back'
+            size={24}
+            color='white'
+          />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Mapa de Áreas Protegidas</Text>
         <View style={styles.placeholder} />
       </View>
 
-      {!mapReady ? (
-        <View style={styles.mapFallback}>
-          <Text style={styles.fallbackText}>
-            {mapReady ? 'Mapa cargado ✓' : 'Cargando mapa...'}
-          </Text>
-          <Text style={styles.fallbackSubtext}>
-            {areas.length} áreas protegidas encontradas
-          </Text>
-        </View>
-      ) : (
-        <MapView
-          style={StyleSheet.absoluteFill}
-          initialRegion={{
-            latitude: 18.7357,
-            longitude: -70.1627,
-            latitudeDelta: 3.0,
-            longitudeDelta: 3.0,
-          }}
-          onMapReady={onMapReady}
-        >
-          {areas.map((area) => (
-            <Marker
-              key={area.id}
-              coordinate={{
-                latitude: area.latitud,
-                longitude: area.longitud,
-              }}
-              pinColor={getTypeColor(area.tipo)}
-              onPress={() => handleMarkerPress(area)}
-            >
-              <Callout>
-                <View style={styles.calloutContainer}>
-                  <Text style={styles.calloutTitle}>{area.nombre}</Text>
-                  <Text style={styles.calloutType}>{area.tipo}</Text>
-                  <Text style={styles.calloutProvince}>{area.ubicacion}</Text>
-                </View>
-              </Callout>
-            </Marker>
-          ))}
-        </MapView>
-      )}
+      {/* Contador */}
+      <View style={styles.counter}>
+        <Text style={styles.counterText}>
+          🗺️ {areas.length} áreas protegidas en República Dominicana
+        </Text>
+      </View>
 
+      {/* Mapa real con Leaflet */}
+      <WebView
+        style={styles.webview}
+        source={{ html: generateMapHTML() }}
+        onMessage={handleWebViewMessage}
+        javaScriptEnabled={true}
+        domStorageEnabled={true}
+        startInLoadingState={true}
+        scalesPageToFit={true}
+        showsHorizontalScrollIndicator={false}
+        showsVerticalScrollIndicator={false}
+      />
+
+      {/* Información del área seleccionada */}
       {selectedArea && (
-        <View style={styles.bottomSheet}>
-          <Card style={styles.selectedAreaCard}>
-            <Card.Content>
-              <View style={styles.cardHeader}>
-                <Chip 
-                  style={[styles.typeChip, { backgroundColor: getTypeColor(selectedArea.tipo) }]}
-                  textStyle={styles.typeText}
-                >
-                  {selectedArea.tipo}
-                </Chip>
-                <TouchableOpacity
-                  onPress={() => setSelectedArea(null)}
-                  style={styles.closeButton}
-                >
-                  <Ionicons name="close" size={20} color="#666" />
-                </TouchableOpacity>
-              </View>
-              
-              <Text style={styles.selectedAreaTitle}>{selectedArea.nombre}</Text>
-              <Text style={styles.selectedAreaProvince}>📍 {selectedArea.ubicacion}</Text>
-              <Text style={styles.selectedAreaDescription} numberOfLines={2}>
-                {selectedArea.descripcion}
-              </Text>
-              
-              <Button
-                mode="contained"
-                onPress={viewAreaDetails}
-                buttonColor="#2E7D32"
-                style={styles.detailButton}
-              >
-                Ver Detalles
-              </Button>
-            </Card.Content>
-          </Card>
+        <View style={styles.bottomInfo}>
+          <View style={styles.infoCard}>
+            <Text style={styles.infoTitle}>
+              {getTypeIcon(selectedArea.tipo)} {selectedArea.nombre}
+            </Text>
+            <Text
+              style={[
+                styles.infoType,
+                { color: getTypeColor(selectedArea.tipo) }
+              ]}
+            >
+              {selectedArea.tipo}
+            </Text>
+            <Text style={styles.infoLocation}>📍 {selectedArea.ubicacion}</Text>
+            <TouchableOpacity
+              style={[
+                styles.detailButton,
+                { backgroundColor: getTypeColor(selectedArea.tipo) }
+              ]}
+              onPress={() =>
+                navigation.navigate('ProtectedAreaDetail', {
+                  id: selectedArea.id
+                })
+              }
+            >
+              <Text style={styles.detailButtonText}>Ver Detalles</Text>
+              <Ionicons
+                name='arrow-forward'
+                size={16}
+                color='white'
+              />
+            </TouchableOpacity>
+          </View>
         </View>
-      )}    
+      )}
     </View>
-  );
+  )
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#f5f5f5',
-  },
-  loadingText: {
-    marginTop: 10,
-    fontSize: 16,
-    color: '#666',
-  },
-  mapLoadingContainer: {
-    position: 'absolute',
-    top: '50%',
-    left: '50%',
-    transform: [{ translateX: -50 }, { translateY: -50 }],
-    zIndex: 1000,
-    backgroundColor: 'rgba(255, 255, 255, 0.9)',
-    padding: 20,
-    borderRadius: 10,
-    alignItems: 'center',
-  },
-  mapLoadingText: {
-    marginTop: 10,
-    fontSize: 16,
-    color: '#666',
-  },
-  mapFallback: {
-    position: 'absolute',
-    top: 100,
-    left: 20,
-    right: 20,
-    backgroundColor: 'rgba(255, 255, 255, 0.9)',
-    padding: 15,
-    borderRadius: 8,
-    zIndex: 1000,
-    alignItems: 'center',
-  },
-  fallbackText: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#2E7D32',
-    marginBottom: 5,
-  },
-  fallbackSubtext: {
-    fontSize: 14,
-    color: '#666',
+    backgroundColor: '#f5f5f5'
   },
   header: {
     backgroundColor: '#2E7D32',
@@ -203,10 +272,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    zIndex: 1,
+    zIndex: 1000
   },
   backButton: {
-    padding: 5,
+    padding: 5
   },
   headerTitle: {
     color: 'white',
@@ -214,83 +283,69 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     flex: 1,
     textAlign: 'center',
-    marginHorizontal: 10,
+    marginHorizontal: 10
   },
   placeholder: {
-    width: 34,
+    width: 34
   },
-  map: {
-    height: 400,
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-  },
-  calloutContainer: {
-    width: 150,
-    padding: 5,
-  },
-  calloutTitle: {
-    fontSize: 14,
-    fontWeight: 'bold',
-    marginBottom: 3,
-  },
-  calloutType: {
-    fontSize: 12,
-    color: '#2E7D32',
-    fontWeight: 'bold',
-    marginBottom: 2,
-  },
-  calloutProvince: {
-    fontSize: 12,
-    color: '#666',
-  },
-  bottomSheet: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    backgroundColor: 'transparent',
-    padding: 15,
-  },
-  selectedAreaCard: {
-    elevation: 5,
-  },
-  cardHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+  counter: {
+    backgroundColor: 'white',
+    padding: 12,
     alignItems: 'center',
-    marginBottom: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee'
   },
-  typeChip: {
-    height: 28,
+  counterText: {
+    fontSize: 14,
+    color: '#2E7D32',
+    fontWeight: 'bold'
   },
-  typeText: {
-    color: 'white',
-    fontSize: 12,
-    fontWeight: 'bold',
+  webview: {
+    flex: 1
   },
-  closeButton: {
-    padding: 5,
+  bottomInfo: {
+    position: 'absolute',
+    bottom: 20,
+    left: 20,
+    right: 20,
+    zIndex: 1000
   },
-  selectedAreaTitle: {
+  infoCard: {
+    backgroundColor: 'white',
+    padding: 15,
+    borderRadius: 12,
+    elevation: 5,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4
+  },
+  infoTitle: {
     fontSize: 16,
     fontWeight: 'bold',
     color: '#333',
-    marginBottom: 5,
+    marginBottom: 5
   },
-  selectedAreaProvince: {
+  infoType: {
+    fontSize: 12,
+    fontWeight: 'bold',
+    marginBottom: 5
+  },
+  infoLocation: {
     fontSize: 14,
     color: '#666',
-    marginBottom: 8,
-  },
-  selectedAreaDescription: {
-    fontSize: 14,
-    color: '#666',
-    lineHeight: 18,
-    marginBottom: 15,
+    marginBottom: 15
   },
   detailButton: {
-    paddingVertical: 5,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 12,
+    borderRadius: 8
   },
-});
+  detailButtonText: {
+    color: 'white',
+    fontWeight: 'bold',
+    marginRight: 8
+  }
+})
