@@ -30,7 +30,7 @@ export default function AboutUsScreen() {
       role: 'Desarrollador Backend',
       phone: '+1-849-806-5000',
       telegram: 'https://t.me/adolfo_rosa',
-      image: 'https://via.placeholder.com/120x120/4CAF50/FFFFFF?text=MIF',
+      image: require('../assets/adolfo.webp'),
       skills: ['Node.js', 'Express', 'MongoDB']
     },
     // TODO: Luis Arturo que coloque sus detalles
@@ -89,7 +89,11 @@ export default function AboutUsScreen() {
             <Card.Content style={styles.developerContent}>
               <View style={styles.developerHeader}>
                 <Image
-                  source={typeof developer.image === 'string' ? { uri: developer.image } : developer.image}
+                  source={
+                    typeof developer.image === 'string'
+                      ? { uri: developer.image }
+                      : developer.image
+                  }
                   style={styles.developerImage}
                 />
                 <View style={styles.developerInfo}>
