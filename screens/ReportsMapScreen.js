@@ -6,7 +6,7 @@ import {
   TouchableOpacity,
   Alert,
 } from 'react-native';
-import MapView, { Marker, Callout } from 'react-native-maps';
+import { WebView } from 'react-native-webview';
 import { ActivityIndicator, Card, Button, Chip } from 'react-native-paper';
 import { Ionicons } from '@expo/vector-icons';
 import { AuthContext } from '../App';
@@ -17,7 +17,7 @@ export default function ReportsMapScreen({ navigation }) {
   const [loading, setLoading] = useState(true);
   const [selectedReport, setSelectedReport] = useState(null);
   const { isLoggedIn, user } = useContext(AuthContext);
-  const mapRef = useRef(null);
+  const webViewRef = useRef(null);
 
   useEffect(() => {
     if (!isLoggedIn) {
@@ -69,16 +69,6 @@ export default function ReportsMapScreen({ navigation }) {
       })).filter(x => Number.isFinite(x.latitude) && Number.isFinite(x.longitude));
 
       setReports(list);
-
-      // Ajusta la cámara a todos los marcadores
-      setTimeout(() => {
-        if (mapRef.current && list.length > 0) {
-          mapRef.current.fitToCoordinates(
-            list.map(p => ({ latitude: p.latitude, longitude: p.longitude })),
-            { edgePadding: { top: 80, right: 80, bottom: 140, left: 80 }, animated: true }
-          );
-        }
-      }, 300);
     } catch (error) {
       console.error('Error fetching reports:', error);
       if ((error.message || '').includes('401')) {
@@ -97,6 +87,81 @@ export default function ReportsMapScreen({ navigation }) {
 
   const viewReportDetails = () => {
     if (selectedReport) navigation.navigate('ReportDetail', { report: selectedReport });
+  };
+
+  const buildMapHtml = (reportsData) => {
+    const markersJson = JSON.stringify(reportsData);
+    return `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+        <style>html,body,#map{height:100%;margin:0;padding:0;} .leaflet-container{font-size:14px;}</style>
+      </head>
+      <body>
+        <div id="map"></div>
+        <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+        <script>
+          const reports = ${markersJson};
+          const map = L.map('map').setView([18.7357, -70.1627], 8);
+          L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            attribution: '© OpenStreetMap'
+          }).addTo(map);
+
+          function statusColor(status) {
+            const mapColors = {
+              'Pendiente': '#9E9E9E',
+              'En Revisión': '#FF9800',
+              'En Proceso': '#2196F3',
+              'Resuelto': '#4CAF50',
+              'Rechazado': '#F44336'
+            };
+            return mapColors[status] || '#666';
+          }
+
+          reports.forEach(r => {
+            try {
+              const marker = L.circleMarker([r.latitude, r.longitude], {
+                radius: 8,
+                fillColor: statusColor(r.status),
+                color: '#fff',
+                weight: 1,
+                opacity: 1,
+                fillOpacity: 0.9
+              }).addTo(map);
+
+              marker.bindPopup(\`<b>\${r.title}</b><br>\${r.status}<br>\${r.code}\`);
+
+              marker.on('click', function() {
+                window.ReactNativeWebView.postMessage(JSON.stringify({ type: 'marker_click', id: r.id }));
+              });
+            } catch(e) {
+              console.warn('Invalid marker', e);
+            }
+          });
+
+          if (reports.length > 0) {
+            const coords = reports.map(r => [r.latitude, r.longitude]);
+            map.fitBounds(coords, { padding: [50,50] });
+          }
+        </script>
+      </body>
+      </html>
+    `;
+  };
+
+  const handleWebViewMessage = (event) => {
+    try {
+      const data = JSON.parse(event.nativeEvent.data);
+      if (data?.type === 'marker_click') {
+        const rpt = reports.find(r => r.id === data.id);
+        if (rpt) setSelectedReport(rpt);
+      }
+    } catch (e) {
+      console.warn('Invalid message from webview', e);
+    }
   };
 
   if (!isLoggedIn) {
@@ -148,35 +213,15 @@ export default function ReportsMapScreen({ navigation }) {
         </View>
       ) : (
         <>
-          <MapView
-            ref={mapRef}
+          <WebView
+            ref={webViewRef}
             style={styles.map}
-            initialRegion={{
-              latitude: 18.7357,
-              longitude: -70.1627,
-              latitudeDelta: 3.5,
-              longitudeDelta: 3.5,
-            }}
-            showsUserLocation
-            showsMyLocationButton
-          >
-            {reports.map((report) => (
-              <Marker
-                key={report.id}
-                coordinate={{ latitude: report.latitude, longitude: report.longitude }}
-                pinColor={getStatusColor(report.status)}
-                onPress={() => handleMarkerPress(report)}
-              >
-                <Callout>
-                  <View style={styles.calloutContainer}>
-                    <Text style={styles.calloutTitle}>{report.title}</Text>
-                    <Text style={styles.calloutStatus}>{report.status}</Text>
-                    <Text style={styles.calloutCode}>{report.code}</Text>
-                  </View>
-                </Callout>
-              </Marker>
-            ))}
-          </MapView>
+            originWhitelist={['*']}
+            source={{ html: buildMapHtml(reports) }}
+            javaScriptEnabled
+            domStorageEnabled
+            onMessage={handleWebViewMessage}
+          />
 
           {selectedReport && (
             <View style={styles.bottomSheet}>
@@ -234,10 +279,6 @@ const styles = StyleSheet.create({
   emptyText: { fontSize: 16, color: '#666', textAlign: 'center', marginBottom: 20 },
   newReportButton: { paddingVertical: 5 },
   map: { flex: 1 },
-  calloutContainer: { width: 150, padding: 5 },
-  calloutTitle: { fontSize: 14, fontWeight: 'bold', marginBottom: 3 },
-  calloutStatus: { fontSize: 12, color: '#2E7D32', fontWeight: 'bold', marginBottom: 2 },
-  calloutCode: { fontSize: 12, color: '#666' },
   bottomSheet: { position: 'absolute', bottom: 0, left: 0, right: 0, backgroundColor: 'transparent', padding: 15 },
   selectedReportCard: { elevation: 5 },
   cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 },
