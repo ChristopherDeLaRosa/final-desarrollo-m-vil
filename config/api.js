@@ -12,6 +12,7 @@ export const API_ENDPOINTS = {
   VOLUNTARIOS: '/voluntarios',
 
   // Privados
+  REGISTER: '/auth/register',
   LOGIN: '/auth/login',
   RECOVER: '/auth/recover',
   NORMATIVAS: '/normativas',
