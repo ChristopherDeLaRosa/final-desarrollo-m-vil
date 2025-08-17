@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect } from 'react'
 import {
   View,
   Text,
@@ -6,58 +6,58 @@ import {
   ScrollView,
   Image,
   Dimensions,
-  TouchableOpacity,
-} from "react-native";
-import { Card, Title, Paragraph } from "react-native-paper";
+  TouchableOpacity
+} from 'react-native'
+import { Card, Title, Paragraph } from 'react-native-paper'
 
-const { width } = Dimensions.get("window");
+const { width } = Dimensions.get('window')
 
 const sliderImages = [
   {
     id: 1,
-    image: "https://s1.significados.com/foto/medio-ambiente.jpg?class=article",
-    title: "Protege nuestro Medio Ambiente",
+    image: 'https://s1.significados.com/foto/medio-ambiente.jpg?class=article',
+    title: 'Protege nuestro Medio Ambiente',
     message:
-      "Juntos podemos crear un futuro sostenible para República Dominicana",
+      'Juntos podemos crear un futuro sostenible para República Dominicana'
   },
   {
     id: 2,
     image:
-      "https://www.bbva.com/wp-content/uploads/2023/03/bbva-destina-medioambiente-podcast-blink-1536x944.jpg",
-    title: "Conserva nuestros Bosques",
-    message: "Los bosques son el pulmón de nuestro país",
+      'https://www.bbva.com/wp-content/uploads/2023/03/bbva-destina-medioambiente-podcast-blink-1536x944.jpg',
+    title: 'Conserva nuestros Bosques',
+    message: 'Los bosques son el pulmón de nuestro país'
   },
   {
     id: 3,
-    image: "http://recursos.galt.mx/hubfs/agua-limpia-con-energia-solar.jpeg",
-    title: "Agua Limpia para Todos",
-    message: "Cuidemos nuestros recursos hídricos",
-  },
-];
+    image: 'http://recursos.galt.mx/hubfs/agua-limpia-con-energia-solar.jpeg',
+    title: 'Agua Limpia para Todos',
+    message: 'Cuidemos nuestros recursos hídricos'
+  }
+]
 
 export default function HomeScreen({ navigation }) {
-  const [currentSlide, setCurrentSlide] = useState(0);
-  const scrollViewRef = useRef(null);
+  const [currentSlide, setCurrentSlide] = useState(0)
+  const scrollViewRef = useRef(null)
 
   useEffect(() => {
     const timer = setInterval(() => {
       setCurrentSlide((prev) => {
-        const next = (prev + 1) % sliderImages.length;
+        const next = (prev + 1) % sliderImages.length
         scrollViewRef.current?.scrollTo({
           x: next * width,
-          animated: true,
-        });
-        return next;
-      });
-    }, 4000);
+          animated: true
+        })
+        return next
+      })
+    }, 4000)
 
-    return () => clearInterval(timer);
-  }, []);
+    return () => clearInterval(timer)
+  }, [])
 
   const onScrollEnd = (e) => {
-    const pageNumber = Math.round(e.nativeEvent.contentOffset.x / width);
-    setCurrentSlide(pageNumber);
-  };
+    const pageNumber = Math.round(e.nativeEvent.contentOffset.x / width)
+    setCurrentSlide(pageNumber)
+  }
 
   return (
     <ScrollView style={styles.container}>
@@ -76,8 +76,14 @@ export default function HomeScreen({ navigation }) {
           onMomentumScrollEnd={onScrollEnd}
         >
           {sliderImages.map((item) => (
-            <View key={item.id} style={styles.slide}>
-              <Image source={{ uri: item.image }} style={styles.slideImage} />
+            <View
+              key={item.id}
+              style={styles.slide}
+            >
+              <Image
+                source={{ uri: item.image }}
+                style={styles.slideImage}
+              />
               <View style={styles.slideOverlay}>
                 <Text style={styles.slideTitle}>{item.title}</Text>
                 <Text style={styles.slideMessage}>{item.message}</Text>
@@ -105,7 +111,7 @@ export default function HomeScreen({ navigation }) {
           <TouchableOpacity
             style={styles.quickCard}
             onPress={() =>
-              navigation.navigate("Información", { screen: "News" })
+              navigation.navigate('Información', { screen: 'News' })
             }
           >
             <Card style={styles.card}>
@@ -119,8 +125,8 @@ export default function HomeScreen({ navigation }) {
           <TouchableOpacity
             style={styles.quickCard}
             onPress={() =>
-              navigation.navigate("Medio Ambiente", {
-                screen: "ProtectedAreas",
+              navigation.navigate('Medio Ambiente', {
+                screen: 'ProtectedAreas'
               })
             }
           >
@@ -137,7 +143,7 @@ export default function HomeScreen({ navigation }) {
           <TouchableOpacity
             style={styles.quickCard}
             onPress={() =>
-              navigation.navigate("Información", { screen: "Services" })
+              navigation.navigate('Información', { screen: 'Services' })
             }
           >
             <Card style={styles.card}>
@@ -151,7 +157,7 @@ export default function HomeScreen({ navigation }) {
           <TouchableOpacity
             style={styles.quickCard}
             onPress={() =>
-              navigation.navigate("Información", { screen: "Volunteer" })
+              navigation.navigate('Información', { screen: 'Volunteer' })
             }
           >
             <Card style={styles.card}>
@@ -167,7 +173,7 @@ export default function HomeScreen({ navigation }) {
           <TouchableOpacity
             style={styles.quickCard}
             onPress={() =>
-              navigation.navigate("Información", { screen: "Videos" })
+              navigation.navigate('Información', { screen: 'Videos' })
             }
           >
             <Card style={styles.card}>
@@ -181,7 +187,7 @@ export default function HomeScreen({ navigation }) {
           <TouchableOpacity
             style={styles.quickCard}
             onPress={() =>
-              navigation.navigate("Información", { screen: "About" })
+              navigation.navigate('Información', { screen: 'About' })
             }
           >
             <Card style={styles.card}>
@@ -197,7 +203,7 @@ export default function HomeScreen({ navigation }) {
           <TouchableOpacity
             style={styles.quickCard}
             onPress={() =>
-              navigation.navigate("Información", { screen: "Team" })
+              navigation.navigate('Información', { screen: 'Team' })
             }
           >
             <Card style={styles.card}>
@@ -211,7 +217,7 @@ export default function HomeScreen({ navigation }) {
           <TouchableOpacity
             style={styles.quickCard}
             onPress={() =>
-              navigation.navigate("Información", { screen: "AboutUs" })
+              navigation.navigate('Información', { screen: 'AboutUs' })
             }
           >
             <Card style={styles.card}>
@@ -251,125 +257,124 @@ export default function HomeScreen({ navigation }) {
         </Card>
       </View>
     </ScrollView>
-  );
+  )
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#f5f5f5",
+    backgroundColor: '#f5f5f5'
   },
   header: {
-    backgroundColor: "#2E7D32",
+    backgroundColor: '#2E7D32',
     padding: 20,
-    alignItems: "center",
-    marginTop: 40,
+    alignItems: 'center'
   },
   headerTitle: {
-    color: "white",
+    color: 'white',
     fontSize: 20,
-    fontWeight: "bold",
-    textAlign: "center",
+    fontWeight: 'bold',
+    textAlign: 'center'
   },
   headerSubtitle: {
-    color: "white",
+    color: 'white',
     fontSize: 14,
-    marginTop: 5,
+    marginTop: 5
   },
   sliderContainer: {
     height: 250,
-    marginVertical: 20,
+    marginVertical: 20
   },
   slide: {
     width: width,
     height: 200,
-    position: "relative",
+    position: 'relative'
   },
   slideImage: {
-    width: "90%",
+    width: '90%',
     height: 200,
-    alignSelf: "center",
-    borderRadius: 10,
+    alignSelf: 'center',
+    borderRadius: 10
   },
   slideOverlay: {
-    position: "absolute",
+    position: 'absolute',
     bottom: 0,
-    left: "5%",
-    right: "5%",
-    backgroundColor: "rgba(0,0,0,0.5)",
+    left: '5%',
+    right: '5%',
+    backgroundColor: 'rgba(0,0,0,0.5)',
     padding: 15,
     borderBottomLeftRadius: 10,
-    borderBottomRightRadius: 10,
+    borderBottomRightRadius: 10
   },
   slideTitle: {
-    color: "white",
+    color: 'white',
     fontSize: 18,
-    fontWeight: "bold",
-    marginBottom: 5,
+    fontWeight: 'bold',
+    marginBottom: 5
   },
   slideMessage: {
-    color: "white",
-    fontSize: 14,
+    color: 'white',
+    fontSize: 14
   },
   dotsContainer: {
-    flexDirection: "row",
-    justifyContent: "center",
-    alignItems: "center",
-    marginTop: 10,
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 10
   },
   dot: {
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: "#ccc",
-    marginHorizontal: 4,
+    backgroundColor: '#ccc',
+    marginHorizontal: 4
   },
   activeDot: {
-    backgroundColor: "#2E7D32",
+    backgroundColor: '#2E7D32'
   },
   quickAccessContainer: {
-    padding: 20,
+    padding: 20
   },
   sectionTitle: {
     fontSize: 20,
-    fontWeight: "bold",
-    color: "#2E7D32",
-    marginBottom: 15,
+    fontWeight: 'bold',
+    color: '#2E7D32',
+    marginBottom: 15
   },
   cardRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginBottom: 15,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 15
   },
   quickCard: {
-    flex: 0.48,
+    flex: 0.48
   },
   card: {
-    elevation: 3,
+    elevation: 3
   },
   cardContent: {
-    alignItems: "center",
-    padding: 20,
+    alignItems: 'center',
+    padding: 20
   },
   cardIcon: {
     fontSize: 30,
-    marginBottom: 10,
+    marginBottom: 10
   },
   cardTitle: {
     fontSize: 14,
-    fontWeight: "bold",
-    textAlign: "center",
+    fontWeight: 'bold',
+    textAlign: 'center'
   },
   tipsContainer: {
     padding: 20,
-    paddingTop: 0,
+    paddingTop: 0
   },
   tipCard: {
     marginBottom: 10,
-    elevation: 2,
+    elevation: 2
   },
   tipText: {
     fontSize: 14,
-    lineHeight: 20,
-  },
-});
+    lineHeight: 20
+  }
+})

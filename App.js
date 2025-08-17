@@ -30,6 +30,7 @@ import ChangePasswordScreen from './screens/ChangePasswordScreen'
 import ProtectedAreaDetailScreen from './screens/ProtectedAreaDetailScreen'
 import NewsDetailScreen from './screens/NewsDetailScreen'
 import ReportDetailScreen from './screens/ReportDetailScreen'
+import { SafeAreaView } from 'react-native-safe-area-context'
 
 const Tab = createBottomTabNavigator()
 const Stack = createStackNavigator()
@@ -253,7 +254,9 @@ export default function App() {
       <PaperProvider>
         <NavigationContainer>
           <StatusBar style='auto' />
-          <MainTabs isLoggedIn={isLoggedIn} />
+          <SafeAreaView style={{ flex: 1 }}>
+            <MainTabs isLoggedIn={isLoggedIn} />
+          </SafeAreaView>
         </NavigationContainer>
       </PaperProvider>
     </AuthContext.Provider>

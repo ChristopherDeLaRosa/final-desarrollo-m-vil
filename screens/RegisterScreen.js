@@ -322,8 +322,7 @@ const styles = StyleSheet.create({
   header: {
     backgroundColor: '#2E7D32',
     padding: 20,
-    alignItems: 'center',
-    marginTop: 40
+    alignItems: 'center'
   },
   headerTitle: { color: 'white', fontSize: 20, fontWeight: 'bold' },
   content: { padding: 15 },

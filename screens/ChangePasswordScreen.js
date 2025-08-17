@@ -233,7 +233,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#2E7D32',
     padding: 20,
     alignItems: 'center',
-    marginTop: 40
+    
   },
   headerTitle: { color: 'white', fontSize: 20, fontWeight: 'bold' },
   content: { padding: 15 },
